@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -22,6 +23,7 @@ export class AuthService {
     private readonly rolesService: RolesService,
     private readonly jwtService: JwtService,
     private readonly tokenService: TokenService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(user: CreateUserDTO) {
@@ -40,7 +42,7 @@ export class AuthService {
 
         default:
           throw new HttpException(
-            'Cannot register current user, try again later',
+            'Cannot register current user! Check your data',
             HttpStatus.BAD_REQUEST,
           );
       }
@@ -89,7 +91,9 @@ export class AuthService {
 
   private async generateTokens(payload: ITokenPayload) {
     const access_token = this.jwtService.sign(payload);
-    const refresh_token = this.jwtService.sign(payload, { expiresIn: '40s' });
+    const refresh_token = this.jwtService.sign(payload, {
+      expiresIn: this.configService.get('jwt.access_expires_in'),
+    });
     const refresh_token_id = await this.tokenService.insert(
       refresh_token,
       payload.sub,

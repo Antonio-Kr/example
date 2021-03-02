@@ -5,18 +5,16 @@ import { NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const logger = app.get(Logger);
   try {
-    const app = await NestFactory.create(AppModule);
     const config = app.get('ConfigService');
     app.useGlobalPipes(new ValidationPipe());
-    app.enableCors();
-    app.use((req: Request, res: Response, next: NextFunction) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Accept');
-      next();
+    app.enableCors({
+      allowedHeaders: 'Content-Type, Accept',
+      methods: 'GET,PUT,POST,DELETE',
+      origin: '*',
     });
-    const logger = app.get(Logger);
     const seeder = app.get(Seeder);
 
     seeder
@@ -28,7 +26,7 @@ async function bootstrap() {
       });
     await app.listen(config.get('app.port'));
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 }
 bootstrap();

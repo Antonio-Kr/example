@@ -19,7 +19,7 @@ import { LocalStrategy } from '../helpers/strategies/local.strategy';
       useFactory: async (configService: ConfigService) => {
         return {
           secret: configService.get('jwt.secret'),
-          signOptions: { expiresIn: '20s' },
+          signOptions: { expiresIn: configService.get('jwt.access_expires_in') },
         };
       },
       inject: [ConfigService],
